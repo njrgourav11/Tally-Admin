@@ -70,23 +70,52 @@ export const Dashboard: React.FC = () => {
 
   const checkConnection = async () => {
     try {
+      console.log('Testing Tally connection...');
       const response = await syncAPI.testConnection();
+      console.log('Connection test response:', response.data);
       setConnectionStatus(response.data.connected);
-    } catch (error) {
-      // In production, backend handles Tally connection, so allow sync even if test fails
-      setConnectionStatus(true);
+    } catch (error: any) {
+      console.error('Tally connection test failed:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      setConnectionStatus(false);
     }
   };
 
   const handleManualSync = async () => {
     setSyncing(true);
     try {
+      console.log('Starting manual sync...');
       const response = await syncAPI.manual();
-      toast.success(`Synced ${response.data.count} items successfully`);
+      console.log('Sync response:', response.data);
+      toast.success(`Synced ${response.data.count || 0} items successfully`);
       setLastSync(new Date());
       loadStats();
-    } catch (error) {
-      toast.error('Sync failed');
+      setConnectionStatus(true);
+    } catch (error: any) {
+      console.error('Sync failed:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config
+      });
+      
+      if (error.code === 'NETWORK_ERROR' || error.message?.includes('Network Error')) {
+        toast.error('Network error: Cannot connect to backend. Check if backend is running.');
+      } else if (error.response?.status === 404) {
+        toast.error('Sync endpoint not found. Check backend API.');
+      } else if (error.response?.status === 500) {
+        toast.error('Server error: ' + (error.response?.data?.message || 'Internal server error'));
+      } else if (error.message?.includes('ECONNREFUSED') || error.response?.data?.message?.includes('ECONNREFUSED')) {
+        toast.error('Tally Prime is not running. Please start Tally Prime and enable API access on port 9000.');
+      } else {
+        toast.error('Sync failed: ' + (error.response?.data?.message || error.message || 'Unknown error'));
+      }
+      setConnectionStatus(false);
     } finally {
       setSyncing(false);
     }
@@ -106,6 +135,7 @@ export const Dashboard: React.FC = () => {
           disabled={syncing}
           size="sm"
           className="gap-2"
+          title={!connectionStatus ? 'Tally Prime may not be running' : 'Sync with Tally Prime'}
         >
           <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
           {syncing ? 'Syncing...' : 'Sync Now'}
@@ -115,12 +145,25 @@ export const Dashboard: React.FC = () => {
       <Alert className={connectionStatus ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
         {connectionStatus ? <CheckCircle className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-red-600" />}
         <AlertDescription className={connectionStatus ? 'text-green-800' : 'text-red-800'}>
-          <div className="flex items-center justify-between">
-            <span>Tally Connection: {connectionStatus ? 'Connected' : 'Disconnected'}</span>
-            {lastSync && (
-              <span className="text-xs">
-                Last sync: {lastSync.toLocaleTimeString()}
-              </span>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span>Tally Connection: {connectionStatus ? 'Connected' : 'Disconnected'}</span>
+              {lastSync && (
+                <span className="text-xs">
+                  Last sync: {lastSync.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+            {!connectionStatus && (
+              <div className="text-xs">
+                <p>To enable Tally sync:</p>
+                <ol className="list-decimal list-inside mt-1 space-y-1">
+                  <li>Open Tally Prime</li>
+                  <li>Go to Gateway of Tally → F12: Configure → Connectivity → Set "Enable API" to Yes</li>
+                  <li>Set API Port to 9000</li>
+                  <li>Restart Tally Prime</li>
+                </ol>
+              </div>
             )}
           </div>
         </AlertDescription>

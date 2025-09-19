@@ -9,7 +9,46 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 });
+
+// Add request interceptor for debugging
+api.interceptors.request.use(
+  (config) => {
+    console.log('API Request:', {
+      method: config.method,
+      url: config.url,
+      baseURL: config.baseURL,
+      fullURL: `${config.baseURL}${config.url}`
+    });
+    return config;
+  },
+  (error) => {
+    console.error('Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for debugging
+api.interceptors.response.use(
+  (response) => {
+    console.log('API Response:', {
+      status: response.status,
+      data: response.data,
+      url: response.config.url
+    });
+    return response;
+  },
+  (error) => {
+    console.error('Response Error:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url
+    });
+    return Promise.reject(error);
+  }
+);
 
 export const productAPI = {
   getAll: () => api.get<Product[]>('/products'),
