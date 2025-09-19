@@ -21,6 +21,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants';
 import toast from 'react-hot-toast';
 
 interface SalesReport {
@@ -50,8 +51,8 @@ export const Reports: React.FC = () => {
   const loadReports = async () => {
     try {
       const [salesRes, stockRes] = await Promise.all([
-        axios.get(`http://localhost:5000/api/reports/sales?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`),
-        axios.get('http://localhost:5000/api/reports/stock')
+        axios.get(`${API_BASE_URL}/reports/sales?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`),
+        axios.get(`${API_BASE_URL}/reports/stock`)
       ]);
       
       setSalesReport(salesRes.data);

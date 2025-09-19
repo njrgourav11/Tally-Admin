@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants';
 import toast from 'react-hot-toast';
 
 interface User {
@@ -61,7 +62,7 @@ export const Users: React.FC = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/users');
+      const response = await axios.get(`${API_BASE_URL}/users`);
       setUsers(response.data);
     } catch (error) {
       setUsers([]);
@@ -73,10 +74,10 @@ export const Users: React.FC = () => {
   const handleSave = async () => {
     try {
       if (selectedUser) {
-        await axios.put(`http://localhost:5000/api/users/${selectedUser.id}`, formData);
+        await axios.put(`${API_BASE_URL}/users/${selectedUser.id}`, formData);
         toast.success('User updated successfully');
       } else {
-        await axios.post('http://localhost:5000/api/users', formData);
+        await axios.post(`${API_BASE_URL}/users`, formData);
         toast.success('User created successfully');
       }
       setDialogOpen(false);
@@ -89,7 +90,7 @@ export const Users: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/users/${id}`);
+        await axios.delete(`${API_BASE_URL}/users/${id}`);
         toast.success('User deleted successfully');
         loadUsers();
       } catch (error) {

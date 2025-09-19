@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { Send } from 'lucide-react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants';
 import toast from 'react-hot-toast';
 
 interface Message {
@@ -46,7 +47,7 @@ export const Chat: React.FC = () => {
 
   const loadConversations = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/chat/conversations');
+      const response = await axios.get(`${API_BASE_URL}/chat/conversations`);
       setConversations(response.data);
     } catch (error) {
       setConversations([]);
@@ -58,7 +59,7 @@ export const Chat: React.FC = () => {
   const loadMessages = async (conversationId: string) => {
     setMessagesLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/chat/conversations/${conversationId}/messages`);
+      const response = await axios.get(`${API_BASE_URL}/chat/conversations/${conversationId}/messages`);
       setMessages(response.data);
     } catch (error) {
       setMessages([]);
@@ -71,7 +72,7 @@ export const Chat: React.FC = () => {
     if (!newMessage.trim() || !selectedConversation) return;
 
     try {
-      await axios.post(`http://localhost:5000/api/chat/conversations/${selectedConversation}/messages`, {
+      await axios.post(`${API_BASE_URL}/chat/conversations/${selectedConversation}/messages`, {
         text: newMessage,
         sender: 'Admin',
         isAdmin: true
