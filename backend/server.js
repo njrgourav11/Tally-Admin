@@ -3,6 +3,7 @@ const cors = require('cors');
 const cron = require('node-cron');
 require('dotenv').config();
 
+// ✅ Correct path
 const tallyService = require('./services/tallyService');
 const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
@@ -25,7 +26,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/reports', reportRoutes);
 
-// Auto sync every 30 minutes
+// Auto sync every 30 minutes (⚠️ works only locally, not on Vercel)
 cron.schedule('*/30 * * * *', async () => {
   console.log('Running automatic sync...');
   try {
@@ -35,6 +36,12 @@ cron.schedule('*/30 * * * *', async () => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+if (process.env.VERCEL) {
+  // On Vercel → export app
+  module.exports = app;
+} else {
+  // Local dev → run server
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+}
